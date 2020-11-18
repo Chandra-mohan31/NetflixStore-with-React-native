@@ -1,16 +1,108 @@
-import React from 'react';
+import React,{useState,useEffect} from 'react';
 import {
- Text,
+ ScrollView,
  StyleSheet
 } from "react-native";
+import {
+  
+  Text,
+  
+  Button,
+  
+  H1,
+  Form,
+  Item,
+  Input,
+  
+  Container,
+  
+} from "native-base";
+
+import AsyncStorage from "@react-native-community/async-storage";
 
 
-const Edit = () => {
+const Edit = ({navigation,route}) => {
+
+    const [name,setName] = useState('');
+    const [totalNoSeason,setTotalNoSeason]=useState('');
+    const [id,setId] = useState(null);
+
+    const update = async () => {
+      try {
+        if(!name || !totalNoSeason){
+          return alert("please enter both the values");
+          //snackbar
+        }
+        const seasonToUpdate = {
+          id,
+          name,
+          totalNoSeason,
+          isWatched: false
+        }
+
+        const storedValue = await AsyncStorage.getItem('@season_list');
+        const list = await JSON.parse(storedValue);
+
+        list.map((singleSeason)=>{
+            if(singleSeason.id ==id){
+              singleSeason.name = name;
+              singleSeason.totalNoSeason= totalNoSeason;
+            }
+            return singleSeason
+        })
+
+        await AsyncStorage.setItem('@season_list',JSON.stringify(list));
+        navigation.navigate("Home");
+
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    useEffect(()=>{
+      const {season} = route.params;
+      const {id,name,totalNoSeason} = season;
+
+      setId(id);
+      setName(name);
+      setTotalNoSeason(totalNoSeason);
+
+    },[])
     return (
-        <Text>
-            Edit
-        </Text>
-    )
+      <Container  style={styles.container}>
+        <ScrollView  
+        contentContainerStyle={{flexGrow:1}}
+        >
+          <H1 style={styles.heading}>Add to WatchList</H1>
+          <Form>
+            <Item  rounded  style={styles.formItem} >
+              <Input
+               
+                placeholder="Season name"
+                style={{color:"#eee"}}
+                value={name}
+                onChangeText={(text)=>setName(text)}
+              />
+            </Item>
+            <Item rounded  style={styles.formItem} >
+              <Input 
+                placeholder="Total Number of seasons"
+                style={{color:"#eee"}}
+                value={totalNoSeason}
+                onChangeText={(text)=>setTotalNoSeason(text)}
+              />
+            </Item>
+            
+            <Button rounded block onPress={update}>
+              <Text style={{color:"#eee"}}>Update</Text>
+            </Button>
+            
+          </Form>
+          
+          
+        </ScrollView>
+
+      </Container>
+  )
 }
 
 export default Edit;
